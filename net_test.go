@@ -74,14 +74,60 @@ func TestDialFunc(t *testing.T) {
 
 }
 
-func TestDialFuncError2(t *testing.T) {
+func TestDialFuncRand(t *testing.T) {
+	resolver := &Resolver{
+		cache: map[string][]net.IP{
+			"deeeet.com": []net.IP{
+				net.IP("127.0.0.1"),
+				net.IP("127.0.0.2"),
+				net.IP("127.0.0.3"),
+			},
+		},
+	}
+
+	count := make(map[string]int)
+	dialF := func(ctx context.Context, network, addr string) (net.Conn, error) {
+		count[addr]++
+		return nil, nil
+	}
+
+	for i := 0; i < 100; i++ {
+		if _, err := DialFunc(resolver, dialF)(context.Background(), "tcp", "deeeet.com:443"); err != nil {
+			t.Fatalf("err: %s", err)
+		}
+	}
+
+	for _, c := range count {
+		got := float32(c) / float32(100)
+		if got < float32(0.2) {
+			t.Fatalf("expect rate more than 0.2, got %f", got)
+		}
+	}
+}
+
+func TestDialFuncError1(t *testing.T) {
 	resolver := testResolver(t)
 	if _, err := DialFunc(resolver, nil)(context.Background(), "tcp", "deeeet.jp"); err == nil {
 		t.Fatalf("expect to be failed") // need to specify port
 	}
 }
 
-func TestDialFuncError1(t *testing.T) {
+func TestDialFuncError2(t *testing.T) {
+	originalFunc := lookupIP
+	defer func() {
+		lookupIP = originalFunc
+	}()
+
+	lookupIP = func(ctx context.Context, host string) ([]net.IP, error) {
+		return nil, fmt.Errorf("err")
+	}
+
+	if _, err := DialFunc(testResolver(t), nil)(context.Background(), "tcp", "tcnksm.io:443"); err == nil {
+		t.Fatalf("expect to be failed")
+	}
+}
+
+func TestDialFuncError3(t *testing.T) {
 	resolver := &Resolver{
 		cache: map[string][]net.IP{
 			"tcnksm.io": []net.IP{

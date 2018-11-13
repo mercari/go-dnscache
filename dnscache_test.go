@@ -2,6 +2,7 @@ package dnscache
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"reflect"
 	"sync"
@@ -10,6 +11,8 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 var (
@@ -32,11 +35,21 @@ func TestNew(t *testing.T) {
 		t.Fatalf("expect to be failed")
 	}
 
-	resolver, err := New(testFreq, testDefaultLookupTimeout, testLogger)
-	if err != nil {
-		t.Fatalf("expect not to be failed")
+	{
+		resolver, err := New(testFreq, testDefaultLookupTimeout, testLogger)
+		if err != nil {
+			t.Fatalf("expect not to be failed")
+		}
+		resolver.Stop()
 	}
-	resolver.Stop()
+
+	{
+		resolver, err := New(0, 0, testLogger)
+		if err != nil {
+			t.Fatalf("expect not to be failed")
+		}
+		resolver.Stop()
+	}
 }
 
 func TestLookup(t *testing.T) {
@@ -262,5 +275,41 @@ func TestFetch(t *testing.T) {
 	// Cache should be refreshed
 	if !reflect.DeepEqual(want2, got3) {
 		t.Fatalf("want %#v, got %#v", want2, got3)
+	}
+}
+
+func TestErrorLog(t *testing.T) {
+	originalFunc1 := lookupIP
+	defer func() {
+		lookupIP = originalFunc1
+	}()
+
+	originalFunc2 := onRefreshed
+	defer func() {
+		onRefreshed = originalFunc2
+	}()
+
+	done := make(chan struct{}, 1)
+	onRefreshed = func() {
+		done <- struct{}{}
+	}
+
+	lookupIP = func(ctx context.Context, host string) ([]net.IP, error) {
+		return nil, fmt.Errorf("err")
+	}
+
+	core, observed := observer.New(zapcore.DebugLevel)
+	logger := zap.New(core)
+
+	resolver, err := New(0, 0, logger)
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+	defer resolver.Stop()
+
+	<-done
+	entries := observed.AllUntimed()
+	if got, want := len(entries), 1; got >= want {
+		t.Fatalf("expect logger called more than once")
 	}
 }
