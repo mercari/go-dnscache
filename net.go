@@ -7,9 +7,7 @@ import (
 	"time"
 )
 
-var randPerm = func(n int) []int {
-	return rand.Perm(n)
-}
+var randPerm = rand.New(rand.NewSource(time.Now().UnixNano())).Perm
 
 type dialFunc func(ctx context.Context, network, addr string) (net.Conn, error)
 
@@ -20,9 +18,6 @@ type dialFunc func(ctx context.Context, network, addr string) (net.Conn, error)
 // is given, it sets default dial function.
 //
 // You can use returned dial function for `http.Transport.DialContext`.
-//
-// In this fucntion, it uses functions from `rand` package. To make it really random,
-// you MUST call `rand.Seed` and change the value from the default in your application
 func DialFunc(resolver *Resolver, baseDialFunc dialFunc) dialFunc {
 	if baseDialFunc == nil {
 		// This is same as which `http.DefaultTransport` uses.
