@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net"
 	"testing"
+	"time"
 )
 
 func TestDialFunc(t *testing.T) {
@@ -75,6 +77,11 @@ func TestDialFunc(t *testing.T) {
 }
 
 func TestDialFuncRand(t *testing.T) {
+	rand.Seed(time.Now().UTC().UnixNano())
+	defer func() {
+		rand.Seed(1)
+	}()
+
 	resolver := &Resolver{
 		cache: map[string][]net.IP{
 			"deeeet.com": []net.IP{
