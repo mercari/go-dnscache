@@ -91,17 +91,13 @@ func New(freq time.Duration, lookupTimeout time.Duration, logger *zap.Logger) (*
 	}
 
 	go func() {
-		done := false
 		for {
-			if done {
-				break
-			}
 			select {
 			case <-ticker.C:
 				r.Refresh()
 				onRefreshedFn()
 			case <-ch:
-				done = true
+				return
 			}
 		}
 	}()
