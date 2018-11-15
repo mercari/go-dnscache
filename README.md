@@ -1,4 +1,4 @@
-# go-dnscache [![Go Documentation](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)][godoc] [![Codecov](https://img.shields.io/codecov/c/github/mercari/go-dnscache.svg?style=flat-square)][codecov]
+# go-dnscache [![Go Documentation](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)][godoc] ![CircleCI (all branches)](https://img.shields.io/circleci/project/github/mercari/go-dnscache.svg?style=flat-square) [![Codecov](https://img.shields.io/codecov/c/github/mercari/go-dnscache.svg?style=flat-square)][codecov]
 
 [godoc]: http://godoc.org/go.mercari.io/go-dnscache
 [codecov]: https://codecov.io/gh/mercari/go-dnscache
