@@ -21,7 +21,7 @@ type dialFunc func(ctx context.Context, network, addr string) (net.Conn, error)
 //
 // You can use returned dial function for `http.Transport.DialContext`.
 //
-// In this fucntion, it uses functions from `rand` package. To make it really random,
+// In this function, it uses functions from `rand` package. To make it really random,
 // you MUST call `rand.Seed` and change the value from the default in your application
 func DialFunc(resolver *Resolver, baseDialFunc dialFunc) dialFunc {
 	if baseDialFunc == nil {
