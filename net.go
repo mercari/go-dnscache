@@ -4,10 +4,28 @@ import (
 	"context"
 	"math/rand"
 	"net"
+	"sync"
 	"time"
 )
 
-var randPerm = rand.New(rand.NewSource(time.Now().UnixNano())).Perm
+var randPerm = defaultPerm()
+
+// defaultPerm returns perm function that is safe for
+// concurrent use.
+// Since a source from rand.NewSource is not concurrent safe,
+// protect perm function from concurrent call by locking.
+func defaultPerm() func(int) []int {
+	var (
+		mu sync.Mutex
+		r  = rand.New(rand.NewSource(time.Now().UnixNano()))
+	)
+	return func(n int) (is []int) {
+		mu.Lock()
+		is = r.Perm(n)
+		mu.Unlock()
+		return
+	}
+}
 
 type dialFunc func(ctx context.Context, network, addr string) (net.Conn, error)
 
