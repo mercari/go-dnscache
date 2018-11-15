@@ -91,17 +91,13 @@ func New(freq time.Duration, lookupTimeout time.Duration, logger *zap.Logger) (*
 	}
 
 	go func() {
-		done := false
 		for {
-			if done {
-				break
-			}
 			select {
 			case <-ticker.C:
 				r.Refresh()
 				onRefreshedFn()
 			case <-ch:
-				done = true
+				return
 			}
 		}
 	}()
@@ -139,7 +135,7 @@ func (r *Resolver) Fetch(ctx context.Context, addr string) ([]net.IP, error) {
 func (r *Resolver) Refresh() {
 	r.lock.RLock()
 	addrs := make([]string, 0, len(r.cache))
-	for addr, _ := range r.cache {
+	for addr := range r.cache {
 		addrs = append(addrs, addr)
 	}
 	r.lock.RUnlock()
