@@ -166,13 +166,13 @@ func TestRefresh(t *testing.T) {
 	resolver := testResolver(t)
 	defer resolver.Stop()
 	resolver.cache = map[string][]net.IP{
-		"deeeet.jp": []net.IP{
+		"deeeet.jp": {
 			net.IP("1.1.1.1"),
 		},
-		"deeeet.us": []net.IP{
+		"deeeet.us": {
 			net.IP("2.2.2.2"),
 		},
-		"deeeet.uk": []net.IP{
+		"deeeet.uk": {
 			net.IP("3.3.3.3"),
 		},
 	}

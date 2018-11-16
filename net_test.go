@@ -11,7 +11,7 @@ import (
 func TestDialFunc(t *testing.T) {
 	resolver := &Resolver{
 		cache: map[string][]net.IP{
-			"deeeet.com": []net.IP{
+			"deeeet.com": {
 				net.IP("127.0.0.1"),
 				net.IP("127.0.0.2"),
 				net.IP("127.0.0.3"),
@@ -77,7 +77,7 @@ func TestDialFunc(t *testing.T) {
 func TestDialFuncRand(t *testing.T) {
 	resolver := &Resolver{
 		cache: map[string][]net.IP{
-			"deeeet.com": []net.IP{
+			"deeeet.com": {
 				net.IP("127.0.0.1"),
 				net.IP("127.0.0.2"),
 				net.IP("127.0.0.3"),
@@ -130,7 +130,7 @@ func TestDialFuncError2(t *testing.T) {
 func TestDialFuncError3(t *testing.T) {
 	resolver := &Resolver{
 		cache: map[string][]net.IP{
-			"tcnksm.io": []net.IP{
+			"tcnksm.io": {
 				net.IP("1.1.1.1"),
 				net.IP("2.2.2.2"),
 				net.IP("3.3.3.3"),
