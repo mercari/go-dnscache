@@ -14,8 +14,8 @@ var randPerm = func(n int) []int {
 type dialFunc func(ctx context.Context, network, addr string) (net.Conn, error)
 
 // DialFunc is a helper function which returns `net.DialContext` function.
-// It randomly fetches an IP from the DNS cache and dial it by the given dial
-// function. It dials one by one and return first connected `net.Conn`.
+// It randomly fetches an IP from the DNS cache and dials it by the given dial
+// function. It dials one by one and returns first connected `net.Conn`.
 // If it fails to dial all IPs from cache it returns first error. If no baseDialFunc
 // is given, it sets default dial function.
 //
