@@ -12,7 +12,7 @@ func ExampleDialFunc() {
 	resolver, _ := New(3*time.Second, 5*time.Second, zap.NewNop())
 
 	// You can create a HTTP client which selects an IP from dnscache
-	// randomly and dial it.
+	// randomly and dials it.
 	rand.Seed(time.Now().UTC().UnixNano()) // You MUST run in once in your application
 	client := http.Client{
 		Transport: &http.Transport{

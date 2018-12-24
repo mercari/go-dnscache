@@ -4,7 +4,7 @@
 [circleci]: https://circleci.com/gh/mercari/go-dnscache
 [codecov]: https://codecov.io/gh/mercari/go-dnscache
 
-`go-dnscache` is a Go package for caching DNS lookup results in memory. It asynchronously lookups DNS and refresh results. The main motivation of this package is to avoid too much DNS lookups for every requests (DNS lookup sometimes makes request really slow and causes error). This can be mainly used for the targets which are running on *non-dynamic* environment where IP does not change often.
+`go-dnscache` is a Go package for caching DNS lookup results in memory. It asynchronously lookups DNS and refresh results. The main motivation of this package is to avoid too much DNS lookups for every request (DNS lookup sometimes makes request really slow and causes error). This can be mainly used for the targets which are running on *non-dynamic* environment where IP does not change often.
 
 ## Install
 

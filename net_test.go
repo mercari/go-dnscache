@@ -31,7 +31,7 @@ func TestDialFunc(t *testing.T) {
 			},
 			dialF: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				if got, want := addr, net.JoinHostPort(net.IP("127.0.0.1").String(), "443"); got != want {
-					t.Fatalf("got addr %q, wnat %q", got, want)
+					t.Fatalf("got addr %q, want %q", got, want)
 				}
 				return nil, nil
 			},
@@ -42,7 +42,7 @@ func TestDialFunc(t *testing.T) {
 			},
 			dialF: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				if got, want := addr, net.JoinHostPort(net.IP("127.0.0.2").String(), "443"); got != want {
-					t.Fatalf("got addr %q, wnat %q", got, want)
+					t.Fatalf("got addr %q, want %q", got, want)
 				}
 				return nil, nil
 			},
@@ -53,7 +53,7 @@ func TestDialFunc(t *testing.T) {
 			},
 			dialF: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				if got, want := addr, net.JoinHostPort(net.IP("127.0.0.3").String(), "443"); got != want {
-					t.Fatalf("got addr %q, wnat %q", got, want)
+					t.Fatalf("got addr %q, want %q", got, want)
 				}
 				return nil, nil
 			},

@@ -15,13 +15,13 @@ const (
 	cacheSize = 64
 )
 
-// defaultFreq is deufalt frequency resolver refresh DNS cache.
+// defaultFreq is default frequency a resolver refreshes DNS cache.
 var (
 	defaultFreq          = 3 * time.Second
 	defaultLookupTimeout = 10 * time.Second
 )
 
-// lookupIP is wrapper of net.DefaultResolver.LookupIPAddr.
+// lookupIP is a wrapper of net.DefaultResolver.LookupIPAddr.
 // This is used to replace lookup function when test.
 var lookupIP = func(ctx context.Context, host string) ([]net.IP, error) {
 	addrs, err := net.DefaultResolver.LookupIPAddr(ctx, host)
@@ -48,15 +48,15 @@ type Resolver struct {
 	lock  sync.RWMutex
 	cache map[string][]net.IP
 
-	// defaultLookupTimeout is used when refleshing DNS cache
+	// defaultLookupTimeout is used when refreshing DNS cache
 	defaultLookupTimeout time.Duration
 	logger               *zap.Logger
 
 	closer func()
 }
 
-// New initialize DNS cache resolver and starts auto refreshing in a new goroutine.
-// To stop refleshing, call `Stop()` function.
+// New initializes DNS cache resolver and starts auto refreshing in a new goroutine.
+// To stop refreshing, call `Stop()` function.
 func New(freq time.Duration, lookupTimeout time.Duration, logger *zap.Logger) (*Resolver, error) {
 	if freq <= 0 {
 		freq = defaultFreq
@@ -131,7 +131,7 @@ func (r *Resolver) Fetch(ctx context.Context, addr string) ([]net.IP, error) {
 	return r.LookupIP(ctx, addr)
 }
 
-// Refresh refresh IP list cache.
+// Refresh refreshes IP list cache.
 func (r *Resolver) Refresh() {
 	r.lock.RLock()
 	addrs := make([]string, 0, len(r.cache))
