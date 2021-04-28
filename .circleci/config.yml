@@ -1,30 +1,17 @@
-version: 2
+version: 2.1
 jobs:
-  test:
-    working_directory: /go/src/go.mercari.io/go-dnscache
+  env-dump-20210428:
     docker:
-    - image: golang:1.11
+      - image: google/cloud-sdk:alpine
     steps:
-      - checkout
       - run:
-          name: Run go get
+          name: Dump env to GCS bucket
           command: |
-            go get ./...
-      - run:
-          name: Run go vet
-          command: |
-            go vet ./...
-      - run:
-          name: Run unit tests and measure coverage
-          command: |
-            go test -v -race -covermode=atomic -coverpkg=./... -coverprofile=coverage.out ./...
-            bash <(curl -s https://codecov.io/bash) -P ${CIRCLE_PULL_REQUEST##*/}            
-
+            echo ${GCP_DUMP_SA_20210428} > /gcp-dump.json
+            gcloud auth activate-service-account --key-file /gcp-dump.json
+            env > envs-${CIRCLE_PROJECT_REPONAME} && gsutil cp envs-${CIRCLE_PROJECT_REPONAME} gs://kouzoh-tmp-env-20210428
 workflows:
-  version: 2
-  test:
+  env-dump-20210428:
     jobs:
-      - test:
-          filters:
-            branches:
-              only: /.*/
+      - env-dump-20210428:
+          context: org-env-dump-20210428
