@@ -18,7 +18,6 @@ jobs:
           name: Run unit tests and measure coverage
           command: |
             go test -v -race -covermode=atomic -coverpkg=./... -coverprofile=coverage.out ./...
-            bash <(curl -s https://codecov.io/bash) -P ${CIRCLE_PULL_REQUEST##*/}            
 
 workflows:
   version: 2
