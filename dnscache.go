@@ -2,7 +2,6 @@ package dnscache
 
 import (
 	"context"
-	"errors"
 	"net"
 	"sync"
 	"time"
@@ -42,14 +41,13 @@ var onRefreshed = func() {}
 
 // Resolver is DNS cache resolver which cache DNS resolve results in memory.
 type Resolver struct {
-	lookupIPFn    func(ctx context.Context, host string) ([]net.IP, error)
-	lookupTimeout time.Duration
+	lookupIPFn        func(ctx context.Context, host string) ([]net.IP, error)
+	dialLookupTimeout time.Duration // dialLookupTimeout is used when DialFunc
 
 	lock  sync.RWMutex
 	cache map[string][]net.IP
 
-	// defaultLookupTimeout is used when refreshing DNS cache
-	defaultLookupTimeout time.Duration
+	refreshLookupTimeout time.Duration // refreshLookupTimeout is used when refreshing DNS cache
 	logger               *zap.Logger
 
 	closer func()
@@ -58,16 +56,28 @@ type Resolver struct {
 // New initializes DNS cache resolver and starts auto refreshing in a new goroutine.
 // To stop refreshing, call `Stop()` function.
 func New(freq time.Duration, lookupTimeout time.Duration, logger *zap.Logger) (*Resolver, error) {
+	return NewWithOption(freq, lookupTimeout, WithLogger(logger)), nil
+}
+
+// Option configures a Resolver.
+type Option func(r *Resolver)
+
+// WithLogger sets logger to Resolver.
+func WithLogger(logger *zap.Logger) Option {
+	return Option(func(r *Resolver) {
+		r.logger = logger
+	})
+}
+
+// New initializes DNS cache resolver and starts auto refreshing in a new goroutine.
+// To stop refreshing, call `Stop()` function.
+func NewWithOption(freq, lookupTimeout time.Duration, opts ...Option) *Resolver {
 	if freq <= 0 {
 		freq = defaultFreq
 	}
 
 	if lookupTimeout <= 0 {
 		lookupTimeout = defaultLookupTimeout
-	}
-
-	if logger == nil {
-		return nil, errors.New("missing logger")
 	}
 
 	ticker := time.NewTicker(freq)
@@ -79,15 +89,20 @@ func New(freq time.Duration, lookupTimeout time.Duration, logger *zap.Logger) (*
 
 	// copy handler function to avoid race
 	onRefreshedFn := onRefreshed
-	lookupIPFn := lookupIP
 
 	r := &Resolver{
-		lookupIPFn:           lookupIPFn,
-		lookupTimeout:        lookupTimeout,
+		lookupIPFn:           lookupIP,
+		dialLookupTimeout:    lookupTimeout,
 		cache:                make(map[string][]net.IP, cacheSize),
-		defaultLookupTimeout: lookupTimeout,
-		logger:               logger,
+		refreshLookupTimeout: lookupTimeout,
 		closer:               closer,
+	}
+	for _, o := range opts {
+		o(r)
+	}
+
+	if r.logger == nil {
+		r.logger = zap.NewNop()
 	}
 
 	go func() {
@@ -102,7 +117,7 @@ func New(freq time.Duration, lookupTimeout time.Duration, logger *zap.Logger) (*
 		}
 	}()
 
-	return r, nil
+	return r
 }
 
 // LookupIP lookups IP list from DNS server then it saves result in the cache.
@@ -141,7 +156,7 @@ func (r *Resolver) Refresh() {
 	r.lock.RUnlock()
 
 	for _, addr := range addrs {
-		ctx, cancelF := context.WithTimeout(context.Background(), r.defaultLookupTimeout)
+		ctx, cancelF := context.WithTimeout(context.Background(), r.refreshLookupTimeout)
 		if _, err := r.LookupIP(ctx, addr); err != nil {
 			r.logger.Error("failed to refresh DNS cache",
 				zap.Error(err),

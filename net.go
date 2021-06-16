@@ -41,7 +41,7 @@ func DialFunc(resolver *Resolver, baseDialFunc dialFunc) dialFunc {
 		// Fetch DNS result from cache.
 		//
 		// ctxLookup is only used for cancelling DNS Lookup.
-		ctxLookup, cancelF := context.WithTimeout(ctx, resolver.lookupTimeout)
+		ctxLookup, cancelF := context.WithTimeout(ctx, resolver.dialLookupTimeout)
 		defer cancelF()
 		ips, err := resolver.Fetch(ctxLookup, h)
 		if err != nil {

@@ -31,10 +31,6 @@ func testResolver(t *testing.T) *Resolver {
 }
 
 func TestNew(t *testing.T) {
-	if _, err := New(testFreq, testDefaultLookupTimeout, nil); err == nil {
-		t.Fatalf("expect to be failed")
-	}
-
 	{
 		resolver, err := New(testFreq, testDefaultLookupTimeout, testLogger)
 		if err != nil {
