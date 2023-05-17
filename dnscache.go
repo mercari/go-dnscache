@@ -140,6 +140,7 @@ func (r *Resolver) Refresh() {
 	}
 	r.lock.RUnlock()
 
+	now := time.Now()
 	for _, addr := range addrs {
 		ctx, cancelF := context.WithTimeout(context.Background(), r.defaultLookupTimeout)
 		if _, err := r.LookupIP(ctx, addr); err != nil {
@@ -150,6 +151,9 @@ func (r *Resolver) Refresh() {
 		}
 		cancelF()
 	}
+
+	r.logger.Debug("refreshed DNS cache", zap.Strings("addrs", addrs),
+		zap.Duration("consumes", time.Since(now).Truncate(time.Microsecond)))
 }
 
 // Stop stops auto refreshing.
