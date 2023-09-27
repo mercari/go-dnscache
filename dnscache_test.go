@@ -1,29 +1,26 @@
 package dnscache
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"reflect"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
-
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"go.uber.org/zap/zaptest/observer"
 )
 
 var (
-	testLogger               = zap.NewNop()
 	testFreq                 = 1 * time.Second
 	testDefaultLookupTimeout = 1 * time.Second
 )
 
 func testResolver(t *testing.T) *Resolver {
 	t.Helper()
-	r, err := New(testFreq, testDefaultLookupTimeout, testLogger)
+	r, err := New(testFreq, testDefaultLookupTimeout)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -31,12 +28,8 @@ func testResolver(t *testing.T) *Resolver {
 }
 
 func TestNew(t *testing.T) {
-	if _, err := New(testFreq, testDefaultLookupTimeout, nil); err == nil {
-		t.Fatalf("expect to be failed")
-	}
-
 	{
-		resolver, err := New(testFreq, testDefaultLookupTimeout, testLogger)
+		resolver, err := New(testFreq, testDefaultLookupTimeout)
 		if err != nil {
 			t.Fatalf("expect not to be failed")
 		}
@@ -44,7 +37,7 @@ func TestNew(t *testing.T) {
 	}
 
 	{
-		resolver, err := New(0, 0, testLogger)
+		resolver, err := New(0, 0)
 		if err != nil {
 			t.Fatalf("expect not to be failed")
 		}
@@ -60,7 +53,7 @@ func TestLookup(t *testing.T) {
 			"api.mercari.jp",
 		},
 		{
-			"endpoint-api-origin.mercari.jp",
+			"ya.ru",
 		},
 		{
 			"google.com",
@@ -199,7 +192,7 @@ func TestRefreshed(t *testing.T) {
 		atomic.AddInt32(&counter, 1)
 	}
 
-	resolver, err := New(1*time.Millisecond, testDefaultLookupTimeout, testLogger)
+	resolver, err := New(1*time.Millisecond, testDefaultLookupTimeout)
 	defer resolver.Stop()
 	if err != nil {
 		t.Fatalf("err: %v", err)
@@ -298,18 +291,17 @@ func TestErrorLog(t *testing.T) {
 		return nil, fmt.Errorf("err")
 	}
 
-	core, observed := observer.New(zapcore.DebugLevel)
-	logger := zap.New(core)
+	buf := new(bytes.Buffer)
+	logger := slog.New(slog.NewTextHandler(buf, nil))
 
-	resolver, err := New(0, 0, logger)
+	resolver, err := New(0, 0, WithLogger(logger))
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
 	defer resolver.Stop()
 
 	<-done
-	entries := observed.AllUntimed()
-	if got, want := len(entries), 1; got >= want {
+	if got, want := buf.Len(), 1; got >= want {
 		t.Fatalf("expect logger called more than once")
 	}
 }

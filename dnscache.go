@@ -2,12 +2,10 @@ package dnscache
 
 import (
 	"context"
-	"errors"
+	"log/slog"
 	"net"
 	"sync"
 	"time"
-
-	"go.uber.org/zap"
 )
 
 const (
@@ -50,24 +48,20 @@ type Resolver struct {
 
 	// defaultLookupTimeout is used when refreshing DNS cache
 	defaultLookupTimeout time.Duration
-	logger               *zap.Logger
+	logger               *slog.Logger
 
 	closer func()
 }
 
 // New initializes DNS cache resolver and starts auto refreshing in a new goroutine.
 // To stop refreshing, call `Stop()` function.
-func New(freq time.Duration, lookupTimeout time.Duration, logger *zap.Logger) (*Resolver, error) {
+func New(freq time.Duration, lookupTimeout time.Duration, options ...Option) (*Resolver, error) {
 	if freq <= 0 {
 		freq = defaultFreq
 	}
 
 	if lookupTimeout <= 0 {
 		lookupTimeout = defaultLookupTimeout
-	}
-
-	if logger == nil {
-		return nil, errors.New("missing logger")
 	}
 
 	ticker := time.NewTicker(freq)
@@ -86,8 +80,12 @@ func New(freq time.Duration, lookupTimeout time.Duration, logger *zap.Logger) (*
 		lookupTimeout:        lookupTimeout,
 		cache:                make(map[string][]net.IP, cacheSize),
 		defaultLookupTimeout: lookupTimeout,
-		logger:               logger,
+		logger:               slog.Default(),
 		closer:               closer,
+	}
+
+	for _, o := range options {
+		o.apply(r)
 	}
 
 	go func() {
@@ -144,8 +142,8 @@ func (r *Resolver) Refresh() {
 		ctx, cancelF := context.WithTimeout(context.Background(), r.defaultLookupTimeout)
 		if _, err := r.LookupIP(ctx, addr); err != nil {
 			r.logger.Error("failed to refresh DNS cache",
-				zap.Error(err),
-				zap.String("addr", addr),
+				"error", err,
+				"addr", addr,
 			)
 		}
 		cancelF()

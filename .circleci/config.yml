@@ -3,7 +3,7 @@ jobs:
   test:
     working_directory: /go/src/go.mercari.io/go-dnscache
     docker:
-    - image: golang:1.17-bullseye
+    - image: golang:1.21-bullseye
     steps:
       - checkout
       - run:
