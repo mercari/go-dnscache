@@ -1,15 +1,15 @@
 package dnscache
 
 import (
+	"log/slog"
 	"math/rand"
 	"net/http"
 	"time"
-
-	"go.uber.org/zap"
 )
 
 func ExampleDialFunc() {
-	resolver, _ := New(3*time.Second, 5*time.Second, zap.NewNop())
+	logger := slog.Default().WithGroup("dnscache")
+	resolver, _ := New(3*time.Second, 5*time.Second, WithLogger(logger))
 
 	// You can create a HTTP client which selects an IP from dnscache
 	// randomly and dials it.
